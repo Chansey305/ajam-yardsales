@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#2d6a4f" />
+  <meta name="description" content="AJAM Yardsales — yard sale alerts for Floresville" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/icons/icon.svg" />
+  <title>AJAM Yardsales</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>AJAM Yardsales</h1>
+    <p>Floresville yard-sale alerts</p>
+  </header>
+  <main>
+    <div class="card">
+      <h2>Get a heads-up</h2>
+      <p class="muted">
+        Tap Subscribe to receive short push notes like
+        “Alex is having a yard sale today” when a sale is on.
+      </p>
+      <button id="subscribeBtn" type="button">Subscribe to alerts</button>
+      <div id="status" class="status" role="status"></div>
+    </div>
+    <div class="card">
+      <h2>On your phone</h2>
+      <p class="muted">
+        Open this site over HTTPS (or localhost), allow notifications, then
+        add AJAM Yardsales to your home screen for the best experience.
+      </p>
+      <a class="btn secondary" href="/unsubscribe">Unsubscribe</a>
+    </div>
+  </main>
+  <footer>
+    AJAM Yardsales · Floresville
+  </footer>
+  <script src="/app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(function () {});
+    }
+    var btn = document.getElementById('subscribeBtn');
+    var status = document.getElementById('status');
+    btn.addEventListener('click', async function () {
+      btn.disabled = true;
+      try {
+        await AJAM.subscribePush();
+        AJAM.showStatus(status, 'You are subscribed to AJAM Yardsales alerts.', 'ok');
+      } catch (err) {
+        AJAM.showStatus(status, err.message || 'Could not subscribe', 'err');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#2d6a4f" />
+  <meta name="robots" content="noindex" />
+  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
+  <title>Admin — AJAM Yardsales</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>AJAM Yardsales</h1>
+    <p>Admin</p>
+  </header>
+  <main>
+    <div class="card">
+      <h2>Admin secret</h2>
+      <label for="secret">ADMIN_SECRET</label>
+      <input id="secret" type="password" autocomplete="off" placeholder="from .env" />
+    </div>
+    <div class="card">
+      <h2>Notify now</h2>
+      <label for="name">Who</label>
+      <input id="name" type="text" placeholder="Alex" value="Alex" />
+      <label for="time">Time (optional)</label>
+      <input id="time" type="text" placeholder="9am–2pm" />
+      <label for="place">Place (optional)</label>
+      <input id="place" type="text" placeholder="Floresville" />
+      <label for="body">Custom body (optional — overrides default copy)</label>
+      <textarea id="body" placeholder="Leave blank for: Alex is having a yard sale today"></textarea>
+      <div class="row">
+        <button id="notifyBtn" type="button">Notify now</button>
+        <button id="testBtn" type="button" class="secondary">Test send</button>
+      </div>
+      <div id="status" class="status" role="status"></div>
+    </div>
+    <p class="muted" style="text-align:center">
+      <a href="/">Public page</a>
+    </p>
+  </main>
+  <script>
+    function secret() { return document.getElementById('secret').value.trim(); }
+    function show(msg, kind) {
+      var el = document.getElementById('status');
+      el.textContent = msg;
+      el.className = 'status show ' + (kind || 'info');
+    }
+    async function post(path, body) {
+      var res = await fetch(path, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-secret': secret(),
+        },
+        body: JSON.stringify(body || {}),
+      });
+      var data = await res.json().catch(function () { return {}; });
+      if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+      return data;
+    }
+    document.getElementById('notifyBtn').addEventListener('click', async function () {
+      try {
+        if (!secret()) throw new Error('Enter ADMIN_SECRET');
+        var data = await post('/api/notify', {
+          name: document.getElementById('name').value,
+          time: document.getElementById('time').value,
+          place: document.getElementById('place').value,
+          body: document.getElementById('body').value || undefined,
+        });
+        var msg = 'Sent ' + data.sent + '/' + data.total + (data.failed ? (' (' + data.failed + ' failed)') : '') + (data.preview ? ' — “' + data.preview.body + '”' : '');
+        if (data.errors && data.errors.length) {
+          msg += ' — ' + data.errors.map(function (e) { return e.kind + ':' + (e.statusCode || e.message); }).join(', ');
+        }
+        show(msg, data.failed ? 'err' : 'ok');
+      } catch (err) {
+        show(err.message, 'err');
+      }
+    });
+    document.getElementById('testBtn').addEventListener('click', async function () {
+      try {
+        if (!secret()) throw new Error('Enter ADMIN_SECRET');
+        var data = await post('/api/test', {});
+        var msg = 'Test: sent ' + data.sent + '/' + data.total + (data.failed ? (' (' + data.failed + ' failed)') : '');
+        if (data.errors && data.errors.length) {
+          msg += ' — ' + data.errors.map(function (e) { return e.kind + ':' + (e.statusCode || e.message); }).join(', ');
+        }
+        show(msg, data.failed ? 'err' : 'ok');
+      } catch (err) {
+        show(err.message, 'err');
+      }
+    });
+  </script>
+</body>
+</html>

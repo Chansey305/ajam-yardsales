@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="AJAM Yardsales">
+  <rect width="512" height="512" rx="96" fill="#2d6a4f"/>
+  <text x="256" y="220" text-anchor="middle" font-family="system-ui,sans-serif" font-size="72" font-weight="700" fill="#ffffff">AJAM</text>
+  <text x="256" y="310" text-anchor="middle" font-family="system-ui,sans-serif" font-size="48" font-weight="600" fill="#d8f3dc">Yardsales</text>
+  <circle cx="160" cy="380" r="18" fill="#95d5b2"/>
+  <circle cx="256" cy="380" r="18" fill="#95d5b2"/>
+  <circle cx="352" cy="380" r="18" fill="#95d5b2"/>
+</svg>

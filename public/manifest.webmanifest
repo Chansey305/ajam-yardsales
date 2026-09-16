@@ -1,0 +1,19 @@
+{
+  "name": "AJAM Yardsales",
+  "short_name": "AJAM Yardsales",
+  "description": "Yard sale alerts for Floresville",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f6f3ee",
+  "theme_color": "#2d6a4f",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

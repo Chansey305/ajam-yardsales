@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#2d6a4f" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
+  <title>Unsubscribe — AJAM Yardsales</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>AJAM Yardsales</h1>
+    <p>Unsubscribe</p>
+  </header>
+  <main>
+    <div class="card">
+      <h2>Stop alerts</h2>
+      <p class="muted">Removes this device’s push subscription from AJAM Yardsales.</p>
+      <button id="unsubBtn" type="button" class="danger">Unsubscribe</button>
+      <div id="status" class="status" role="status"></div>
+      <a class="btn secondary" href="/">Back to subscribe</a>
+    </div>
+  </main>
+  <footer>AJAM Yardsales · Floresville</footer>
+  <script src="/app.js"></script>
+  <script>
+    document.getElementById('unsubBtn').addEventListener('click', async function () {
+      var btn = this;
+      var status = document.getElementById('status');
+      btn.disabled = true;
+      try {
+        var result = await AJAM.unsubscribePush();
+        AJAM.showStatus(status, result.note || 'Unsubscribed.', 'ok');
+      } catch (err) {
+        AJAM.showStatus(status, err.message || 'Unsubscribe failed', 'err');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
