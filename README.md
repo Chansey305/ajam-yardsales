@@ -62,17 +62,20 @@ curl -X POST http://localhost:3000/api/test \
   -H "x-admin-secret: YOUR_SECRET"
 ```
 
-## Calendar hook (stub)
+## Calendar auto-notify
 
-`POST /api/calendar-hook` accepts simple JSON for a future Google Calendar auto-notify. **Not integrated with Google.**
+This app does **not** write Google Calendar (Jarvis owns calendar writes). A watcher POSTs sale-day events to the hook; the same `eventId` only notifies once.
+
+**Event title convention:** calendar titles should include `yard sale` or `yardsale` (any case), e.g. `Yard Sale — Floresville`. Location and start time on the event become the push text.
 
 ```bash
 curl -X POST http://localhost:3000/api/calendar-hook \
   -H "Content-Type: application/json" \
-  -d '{"name":"Alex","time":"Sat 8am","place":"Floresville","send":true,"adminSecret":"YOUR_SECRET"}'
+  -H "x-admin-secret: YOUR_SECRET" \
+  -d '{"eventId":"abc123","name":"Alex","time":"9am–2pm","place":"Floresville","send":true}'
 ```
 
-Without a valid secret, the payload is accepted (`202`) but no push is sent. With secret + `send: true`, it notifies like `/api/notify`.
+Without a valid secret, the payload is accepted (`202`) but no push is sent. With secret + `send: true`, it notifies like `/api/notify`. Repeat POSTs with the same `eventId` return `{ reason: "already" }`.
 
 ## Routes
 
@@ -87,7 +90,7 @@ Without a valid secret, the payload is accepted (`202`) but no push is sent. Wit
 | POST | `/api/unsubscribe` | Remove by endpoint |
 | POST | `/api/notify` | Admin secret required |
 | POST | `/api/test` | Admin secret required |
-| POST | `/api/calendar-hook` | Stub; optional notify with secret |
+| POST | `/api/calendar-hook` | Calendar auto-notify; dedupes by `eventId` |
 
 ## Env
 
@@ -95,4 +98,4 @@ See `.env.example`: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `A
 
 ## Out of scope
 
-SMS, marketplace, Facebook, payments, chat, CRM, Google Calendar integration.
+SMS, marketplace, Facebook, payments, chat, CRM. (Calendar writes stay with Jarvis; this app only receives notify hooks.)

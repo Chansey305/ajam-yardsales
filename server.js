@@ -3,6 +3,7 @@ const path = require('path');
 const express = require('express');
 const webpush = require('web-push');
 const store = require('./lib/store');
+const notified = require('./lib/notified-events');
 const { sendToAll, buildPayload } = require('./lib/notify');
 
 const PORT = Number(process.env.PORT) || 3000;
@@ -13,6 +14,7 @@ const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@example.com';
 const DATABASE_PATH = process.env.DATABASE_PATH || './data/subscriptions.db';
 
 store.init(DATABASE_PATH);
+notified.init(DATABASE_PATH);
 
 if (VAPID_PUBLIC && VAPID_PRIVATE) {
   webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE);
@@ -90,16 +92,17 @@ app.post('/api/test', requireAdmin, async (req, res) => {
 });
 
 /**
- * Stub calendar hook for a future Google Calendar auto-notify.
- * Accepts simple JSON; when admin secret is present, can send a notify.
- * Not integrated with Google — wire your calendar watcher later.
+ * Calendar auto-notify entrypoint.
+ * Jarvis (or a morning watcher) POSTs sale-day events here.
+ * Dedupes by eventId so the same calendar event only notifies once.
  *
- * Example body:
+ * Example:
  * {
  *   "adminSecret": "...",
+ *   "eventId": "google-event-id",
  *   "name": "Alex",
- *   "time": "Sat 8am",
- *   "place": "123 Main St, Floresville",
+ *   "time": "9am–2pm",
+ *   "place": "Floresville",
  *   "send": true
  * }
  */
@@ -107,35 +110,49 @@ app.post('/api/calendar-hook', async (req, res) => {
   const body = req.body || {};
   const secret = req.headers['x-admin-secret'] || body.adminSecret;
   const authorized = ADMIN_SECRET && secret === ADMIN_SECRET;
+  const eventId = body.eventId ? String(body.eventId) : null;
 
-  const accepted = {
-    stub: true,
-    message: 'Calendar hook stub — accepted payload, no Google integration',
-    received: {
-      name: body.name || null,
-      time: body.time || null,
-      place: body.place || null,
-      eventId: body.eventId || null,
-      start: body.start || null,
-      send: Boolean(body.send),
-    },
+  const received = {
+    name: body.name || null,
+    time: body.time || null,
+    place: body.place || null,
+    eventId,
+    start: body.start || null,
+    send: Boolean(body.send),
   };
 
   if (!authorized) {
     return res.status(202).json({
-      ...accepted,
       notified: false,
+      received,
       note: 'Provide ADMIN_SECRET (header x-admin-secret or body.adminSecret) and send:true to notify',
     });
   }
 
   if (!body.send) {
-    return res.json({ ...accepted, notified: false, note: 'authorized but send was not true' });
+    return res.json({ notified: false, received, note: 'authorized but send was not true' });
+  }
+
+  if (eventId && notified.has(eventId)) {
+    return res.json({
+      notified: false,
+      reason: 'already',
+      eventId,
+      received,
+    });
   }
 
   try {
     const result = await sendToAll(body);
-    res.json({ ...accepted, notified: true, ...result });
+    if (eventId) {
+      // Record after an attempt so retries do not spam; include send counts.
+      notified.mark(eventId, {
+        sent: result.sent,
+        failed: result.failed,
+        total: result.total,
+      });
+    }
+    res.json({ notified: true, eventId, ...result, preview: buildPayload(body) });
   } catch (err) {
     res.status(500).json({ error: err.message || 'Hook notify failed' });
   }
