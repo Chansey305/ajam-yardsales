@@ -146,3 +146,15 @@ footer a { color: var(--accent); }
   .photo-gallery { grid-template-columns: repeat(3, 1fr); }
 }
 .admin-preview img { cursor: default; }
+
+.bio-box {
+  background: #e8f5e9;
+  border-color: #c8e6c9;
+  padding: 1rem 1.1rem;
+}
+.bio-box p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #1b4332;
+  line-height: 1.5;
+}
