@@ -20,6 +20,10 @@
     <p>Floresville yard-sale alerts</p>
   </header>
   <main>
+    <div class="card" id="photosCard" hidden>
+      <h2>At the sale</h2>
+      <div id="photoGallery" class="photo-gallery" aria-live="polite"></div>
+    </div>
     <div class="card">
       <h2>Get a heads-up</h2>
       <p class="muted">
@@ -67,6 +71,34 @@
         btn.disabled = false;
       }
     });
+
+    (function loadPhotos() {
+      var card = document.getElementById('photosCard');
+      var gallery = document.getElementById('photoGallery');
+      if (!card || !gallery) return;
+      fetch('/api/photos')
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          var urls = (data && data.urls) || [];
+          if (!urls.length) return;
+          gallery.innerHTML = '';
+          urls.forEach(function (url) {
+            var a = document.createElement('a');
+            a.href = url;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            var img = document.createElement('img');
+            img.src = url;
+            img.alt = 'Yard sale photo';
+            img.loading = 'lazy';
+            img.onerror = function () { a.remove(); if (!gallery.children.length) card.hidden = true; };
+            a.appendChild(img);
+            gallery.appendChild(a);
+          });
+          card.hidden = false;
+        })
+        .catch(function () {});
+    })();
   </script>
 </body>
 </html>

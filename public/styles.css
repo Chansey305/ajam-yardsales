@@ -126,3 +126,22 @@ footer a { color: var(--accent); }
 
 .row { display: flex; gap: 0.5rem; }
 .row button { flex: 1; }
+
+.photo-gallery {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+.photo-gallery a { display: block; line-height: 0; }
+.photo-gallery img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #eee;
+}
+@media (min-width: 420px) {
+  .photo-gallery { grid-template-columns: repeat(3, 1fr); }
+}
+.admin-preview img { cursor: default; }

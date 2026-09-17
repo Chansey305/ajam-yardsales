@@ -20,6 +20,18 @@
       <label for="secret">ADMIN_SECRET</label>
       <input id="secret" type="password" autocomplete="off" placeholder="from .env" />
     </div>
+
+    <div class="card">
+      <h2>Sale photos</h2>
+      <p class="muted">One image link per line (https…). Shows above Subscribe on the public page. Direct image links work best (Imgur, etc.). Max 12.</p>
+      <label for="photoUrls">Photo URLs</label>
+      <textarea id="photoUrls" rows="6" placeholder="https://example.com/photo1.jpg&#10;https://example.com/photo2.jpg"></textarea>
+      <div class="row">
+        <button id="savePhotosBtn" type="button">Save photos</button>
+        <button id="clearPhotosBtn" type="button" class="secondary">Clear all</button>
+      </div>
+      <div id="photosPreview" class="photo-gallery admin-preview" style="margin-top:0.75rem"></div>
+    </div>
     <div class="card">
       <h2>Notify now</h2>
       <label for="name">Who</label>
@@ -91,6 +103,63 @@
         show(err.message, 'err');
       }
     });
+
+    function renderPhotoPreview(urls) {
+      var box = document.getElementById('photosPreview');
+      box.innerHTML = '';
+      (urls || []).forEach(function (url) {
+        var img = document.createElement('img');
+        img.src = url;
+        img.alt = '';
+        img.loading = 'lazy';
+        img.onerror = function () { img.style.opacity = '0.3'; };
+        box.appendChild(img);
+      });
+    }
+    async function loadPhotos() {
+      if (!secret()) return;
+      var res = await fetch('/api/photos');
+      var data = await res.json();
+      var urls = (data && data.urls) || [];
+      document.getElementById('photoUrls').value = urls.join('\n');
+      renderPhotoPreview(urls);
+    }
+    document.getElementById('savePhotosBtn').addEventListener('click', async function () {
+      try {
+        if (!secret()) throw new Error('Enter ADMIN_SECRET');
+        var urls = document.getElementById('photoUrls').value.split(/\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean);
+        var res = await fetch('/api/photos', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'x-admin-secret': secret() },
+          body: JSON.stringify({ urls: urls }),
+        });
+        var data = await res.json().catch(function () { return {}; });
+        if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+        document.getElementById('photoUrls').value = (data.urls || []).join('\n');
+        renderPhotoPreview(data.urls || []);
+        show('Saved ' + (data.urls || []).length + ' photo(s)', 'ok');
+      } catch (err) {
+        show(err.message, 'err');
+      }
+    });
+    document.getElementById('clearPhotosBtn').addEventListener('click', async function () {
+      try {
+        if (!secret()) throw new Error('Enter ADMIN_SECRET');
+        var res = await fetch('/api/photos', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'x-admin-secret': secret() },
+          body: JSON.stringify({ urls: [] }),
+        });
+        var data = await res.json().catch(function () { return {}; });
+        if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+        document.getElementById('photoUrls').value = '';
+        renderPhotoPreview([]);
+        show('Photos cleared', 'ok');
+      } catch (err) {
+        show(err.message, 'err');
+      }
+    });
+    document.getElementById('secret').addEventListener('change', function () { loadPhotos().catch(function () {}); });
   </script>
 </body>
 </html>

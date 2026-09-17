@@ -4,6 +4,7 @@ const express = require('express');
 const webpush = require('web-push');
 const store = require('./lib/store');
 const notified = require('./lib/notified-events');
+const photos = require('./lib/photos');
 const { sendToAll, buildPayload } = require('./lib/notify');
 
 const PORT = Number(process.env.PORT) || 3000;
@@ -15,6 +16,7 @@ const DATABASE_PATH = process.env.DATABASE_PATH || './data/subscriptions.db';
 
 store.init(DATABASE_PATH);
 notified.init(DATABASE_PATH);
+photos.init(DATABASE_PATH);
 
 if (VAPID_PUBLIC && VAPID_PRIVATE) {
   webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE);
@@ -66,6 +68,21 @@ app.post('/api/unsubscribe', (req, res) => {
   if (!endpoint) return res.status(400).json({ error: 'endpoint required' });
   const removed = store.remove(endpoint);
   res.json({ ok: true, removed });
+});
+
+
+app.get('/api/photos', (_req, res) => {
+  res.json(photos.list());
+});
+
+app.put('/api/photos', requireAdmin, (req, res) => {
+  try {
+    const urls = (req.body && req.body.urls) || [];
+    const result = photos.setUrls(urls);
+    res.json({ ok: true, ...result });
+  } catch (err) {
+    res.status(400).json({ error: err.message || 'Bad photos payload' });
+  }
 });
 
 app.post('/api/notify', requireAdmin, async (req, res) => {
