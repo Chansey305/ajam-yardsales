@@ -1,6 +1,6 @@
 /* AJAM Yardsales service worker */
-const CACHE = 'ajam-yardsales-v1';
-const PRECACHE = ['/', '/index.html', '/styles.css', '/app.js', '/manifest.webmanifest', '/icons/icon.svg'];
+const CACHE = 'ajam-yardsales-v2';
+const PRECACHE = ['/', '/index.html', '/styles.css', '/app.js', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/apple-touch-icon.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
