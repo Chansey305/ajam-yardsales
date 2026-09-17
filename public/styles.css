@@ -101,7 +101,8 @@ button, .btn {
 button:hover, .btn:hover { background: var(--accent-dark); }
 button:disabled { opacity: 0.55; cursor: not-allowed; }
 button.secondary { background: #fff; color: var(--accent); border: 1px solid var(--accent); }
-button.danger { background: var(--danger); }
+button.danger, .btn.danger { background: var(--danger); color: #fff; }
+button.danger:hover, .btn.danger:hover { background: #7a1a1d; }
 
 .status {
   margin-top: 0.85rem;
